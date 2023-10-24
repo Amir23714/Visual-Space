@@ -2,9 +2,9 @@ import smtplib
 import settings
 from email.mime.text import MIMEText
 from email.header import Header
+from typing import Union
 
-
-def send_email(confirmation_code: str | int, subject: str):
+def send_email(confirmation_code: Union[str, int], subject: str):
     sender = settings.EMAIL_SENDER
     password = settings.EMAIL_PASSWORD
 

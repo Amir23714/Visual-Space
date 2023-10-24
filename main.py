@@ -12,3 +12,6 @@ app.add_middleware(
 )
 
 app.include_router(UserRouter, prefix="/api")
+
+# @app.on_event("startup")
+# async def startup_event():
