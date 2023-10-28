@@ -10,6 +10,9 @@ from DTO.user_registration import User as UserRegistration_DTO
 from DTO.user import User as User_DTO
 from DTO.user_authentification import User as UserAuth_DTO
 from DTO.prompt import Prompt as Prompt_DTO
+from DTO.email import Email as Email_DTO
+from DTO.resetPassword import ResetPassword as ResetPassword_DTO
+from DTO.resetToken import ResetToken as ResetToken_DTO
 
 from models.model import get_db
 import settings
@@ -18,11 +21,12 @@ from redis import asyncio as aioredis
 
 from errors.errors_raising import raise_400
 
-confirmation_codes = aioredis.from_url('redis://localhost', encoding='utf-8', decode_responses=True)
+confirmation_codes = aioredis.from_url('redis://localhost/0', encoding='utf-8', decode_responses=True)
+reset_tokens = aioredis.from_url('redis://localhost/1', encoding='utf-8', decode_responses=True)
 
 router = APIRouter()
 
-Auth = AuthHandler()
+Auth = AuthHandler(reset_tokens)
 Registr = RegistrationHandler(confirmation_codes)
 
 
@@ -33,7 +37,7 @@ async def register(data: UserRegistration_DTO = None, db: Session = Depends(get_
 
 
 @router.post("/confirm", status_code=200)
-async def register(data: UserConfirmation_DTO = None, db: Session = Depends(get_db)):
+async def confirm(data: UserConfirmation_DTO = None, db: Session = Depends(get_db)):
     response = await Registr.confirm(data, db)
     return response
 
@@ -42,6 +46,36 @@ async def register(data: UserConfirmation_DTO = None, db: Session = Depends(get_
 async def login(data: UserAuth_DTO = None, db: Session = Depends(get_db)):
     token: str = Auth.login_user(user=data, db=db)
     return {"token": token}
+
+
+@router.post("/auth", status_code=200)
+async def auth(access_token: Annotated[str, Depends(Auth.get_apikeyHeader())], db: Session = Depends(get_db)):
+    user = Auth.authentificate_user(access_token, db)
+    return {"status": 'Authenticated'}
+
+
+@router.post("/send_reset_code", status_code=200)
+async def send_reset_code(email: Email_DTO, db: Session = Depends(get_db)):
+    generated = await Auth.generate_reset_token(email.email, db)
+
+    if generated:
+        return {"status": 'Sent'}
+
+    raise_400("Error")
+
+
+@router.post("/verify_reset_code", status_code=200)
+async def verify_reset_code(reset_token: ResetToken_DTO,
+                            db: Session = Depends(get_db)):
+    verified = await Auth.verify_reset_token(reset_token.reset_token)
+    return {"status": "Verified"}
+
+
+@router.post("/reset_password", status_code=200)
+async def reset_password(data: ResetPassword_DTO,
+                         db: Session = Depends(get_db)):
+    user = await Auth.reset_password(data.reset_token, data.password1, data.password2, db)
+    return {"status": "Password changed"}
 
 
 @router.post("/get_image", status_code=200)
