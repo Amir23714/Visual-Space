@@ -66,3 +66,13 @@ alembic upgrade head
 uvicorn main:app --reload
 ```
 
+11. Run the celery:
+```bash
+celery -A Authentification.emailUtils:celery worker --loglevel=INFO
+```
+
+12. Run flower (if you want to have GUI for celery):
+```bash
+celery -A Authentification.emailUtils:celery flower
+```
+
