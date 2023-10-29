@@ -39,17 +39,17 @@ class RegistrationHandler:
             else:
                 confirmation_code = random.randint(100000, 999999)
 
-                sended = emailUtils.send_email(confirmation_code, user.email)
+                sended = emailUtils.send_email.delay(confirmation_code, user.email)
 
                 if not sended:
                     raise_400('Internal server error')
                 else:
                     data = {
-                        'email' : user.email,
-                        'password1' : user.password1,
-                        'password2' : user.password2,
-                        'username' : user.username,
-                        'confirmation_code' : str(confirmation_code)
+                        'email': user.email,
+                        'password1': user.password1,
+                        'password2': user.password2,
+                        'username': user.username,
+                        'confirmation_code': str(confirmation_code)
                     }
 
                     await self.confirmation_codes.set(user.email, self.jsonDictionary(data))
@@ -69,7 +69,8 @@ class RegistrationHandler:
 
         initial_code = data['confirmation_code']
 
-        if user.email != data['email'] or user.password1 != data['password1'] or user.password2 != data['password2'] or user.username != data['username']:
+        if user.email != data['email'] or user.password1 != data['password1'] or user.password2 != data[
+            'password2'] or user.username != data['username']:
             raise_400('Одно из полей не совпадает с тем, что вы ввели ранее. Регистрация отклонена')
 
         elif confirmation_code != initial_code:

@@ -98,7 +98,7 @@ class AuthHandler():
         await self.reset_tokens.set(hash_value, email)
         await self.reset_tokens.expire(hash_value, settings.CODE_EXPIRATION_TIME)
 
-        emailUtils.reset_email(hash_value, email)
+        emailUtils.reset_email.delay(hash_value, email)
 
         return True
 

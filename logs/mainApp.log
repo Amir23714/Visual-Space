@@ -1,0 +1,1 @@
+INFO:root:Request time : 2023-10-29 14:08:04.197232 | Process time : 0.004180431365966797 | Sender : 127.0.0.1 | Url : http://127.0.0.1:8000/api/register | Method : POST | Status : 400

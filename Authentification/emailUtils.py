@@ -3,11 +3,15 @@ import settings
 from email.mime.text import MIMEText
 from email.header import Header
 from typing import Union
+from celery import Celery
 
 sender = settings.EMAIL_SENDER
 password = settings.EMAIL_PASSWORD
 
+celery = Celery("emails", broker="redis://localhost:6379/2")
 
+
+@celery.task
 def send_email(confirmation_code: Union[str, int], subject: str):
     message = f"Ваша регистрация практически завершена! Осталось совсем немного\n\n<h2>Ваш код подтверждения:<h2> <h1>{confirmation_code}<h1>"
 
@@ -32,6 +36,7 @@ def send_email(confirmation_code: Union[str, int], subject: str):
         server.quit()
 
 
+@celery.task
 def reset_email(token: str, subject: str):
     message = f"Ссылка для восстановления пароля<br><br><h2>Перейдите по ссылке<h2> <a>file:///home/amir/projects/JSprojects/Visual-Space-JS/templates/reset.html?reset_token={token}<a>"
 
